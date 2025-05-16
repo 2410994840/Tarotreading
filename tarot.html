@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Digital Tarot Reader</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f3f7;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #a45cae;
+  }
+  .container {
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(164,92,174,0.3);
+  }
+  label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+  }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    border: 2px solid #a45cae;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  button {
+    background: #a45cae;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover {
+    background: #823a99;
+  }
+  .cards-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  .card {
+    width: 30%;
+    perspective: 1000px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .card-inner {
+    position: relative;
+    width: 100%;
+    padding-top: 140%;
+    transform-style: preserve-3d;
+    transition: transform 0.7s;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(164,92,174,0.3);
+  }
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+  .card-front,
+  .card-back {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .card-front {
+    background: #a45cae;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .card-back {
+    background: #f3e6f5;
+    color: #6e2e8c;
+    transform: rotateY(180deg);
+    overflow-y: auto;
+  }
+  .overall-reading {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f3e6f5;
+    border-radius: 12px;
+    color: #6e2e8c;
+    font-size: 16px;
+  }
+  .actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .actions button {
+    width: auto;
+    padding: 10px 20px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Digital Tarot Reader</h1>
+    <label for="nameInput">Your Name:</label>
+    <input type="text" id="nameInput" placeholder="Enter your name" />
+
+    <label for="ageInput">Your Age:</label>
+    <input type="number" id="ageInput" placeholder="Enter your age" min="1" max="120" />
+
+    <label for="zodiacInput">Your Zodiac Sign:</label>
+    <select id="zodiacInput">
+      <option value="" disabled selected>Select zodiac sign</option>
+      <option value="Aries">Aries</option>
+      <option value="Taurus">Taurus</option>
+      <option value="Gemini">Gemini</option>
+      <option value="Cancer">Cancer</option>
+      <option value="Leo">Leo</option>
+      <option value="Virgo">Virgo</option>
+      <option value="Libra">Libra</option>
+      <option value="Scorpio">Scorpio</option>
+      <option value="Sagittarius">Sagittarius</option>
+      <option value="Capricorn">Capricorn</option>
+      <option value="Aquarius">Aquarius</option>
+      <option value="Pisces">Pisces</option>
+    </select>
+
+    <label for="focusInput">Focus of Your Reading:</label>
+    <select id="focusInput">
+      <option value="" disabled selected>Select a focus</option>
+      <option value="Love">Love</option>
+      <option value="Career">Career</option>
+      <option value="Health">Health</option>
+      <option value="Finance">Finance</option>
+      <option value="Spirituality">Spirituality</option>
+      <option value="General">General</option>
+    </select>
+
+    <button id="shuffleBtn">Shuffle Deck & Pick Cards</button>
+
+    <div class="cards-container" id="cardsContainer"></div>
+
+    <div class="overall-reading" id="overallReading" style="display:none;"></div>
+
+    <div class="actions" id="actions" style="display:none;">
+      <button id="downloadBtn">Download Reading</button>
+      <button id="shareBtn">Share Reading</button>
+    </div>
+  </div>
+
+<script>
+  const tarotCards = [
+    { name: "The Fool", keywords: "New beginnings, adventure, spontaneity", description: "The Fool represents a fresh start, embracing adventure and trusting the journey ahead." },
+    { name: "The Magician", keywords: "Power, skill, concentration", description: "The Magician symbolizes harnessing your skills and talents to manifest your desires." },
+    { name: "The High Priestess", keywords: "Mystery, intuition, inner knowledge", description: "The High Priestess encourages you to trust your intuition and explore your inner wisdom." },
+    { name: "The Empress", keywords: "Fertility, abundance, nurturing", description: "The Empress embodies growth, nurturing energy, and abundance in life." },
+    { name: "The Emperor", keywords: "Authority, structure, control", description: "The Emperor stands for leadership, structure, and stability in your life." },
+    { name: "The Hierophant", keywords: "Tradition, spirituality, education", description: "The Hierophant invites you to connect with spiritual traditions and learning." },
+    { name: "The Lovers", keywords: "Love, harmony, relationships", description: "The Lovers card highlights partnerships, choices, and harmony in relationships." },
+    { name: "The Chariot", keywords: "Control, willpower, victory", description: "The Chariot signifies determination, willpower, and achieving victory." },
+    { name: "Strength", keywords: "Courage, patience, compassion", description: "Strength reminds you to have courage and compassion through challenges." },
+    { name: "The Hermit", keywords: "Soul-searching, introspection, solitude", description: "The Hermit urges you to seek introspection and spiritual guidance." }
+  ];
+
+  let selectedCards = [];
+  let cardsFlipped = 0;
+
+  const nameInput = document.getElementById("nameInput");
+  const ageInput = document.getElementById("ageInput");
+  const zodiacInput = document.getElementById("zodiacInput");
+  const focusInput = document.getElementById("focusInput");
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const cardsContainer = document.getElementById("cardsContainer");
+  const overallReading = document.getElementById("overallReading");
+  const actionsDiv = document.getElementById("actions");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const shareBtn = document.getElementById("shareBtn");
+
+  shuffleBtn.addEventListener("click", () => {
+    const name = nameInput.value.trim();
+    const age = ageInput.value.trim();
+    const zodiac = zodiacInput.value;
+    const focus = focusInput.value;
+
+    if (!name || !age || !zodiac || !focus) {
+      alert("Please fill in all fields before shuffling.");
+      return;
+    }
+
+    resetReading();
+    shuffleAndPickCards();
+  });
+
+  function resetReading() {
+    cardsContainer.innerHTML = "";
+    overallReading.style.display = "none";
+    overallReading.innerHTML = "";
+    actionsDiv.style.display = "none";
+    selectedCards = [];
+    cardsFlipped = 0;
+  }
+
+  function shuffleAndPickCards() {
+    let deck = [...tarotCards];
+    selectedCards = [];
+
+    while (selectedCards.length < 3) {
+      const index = Math.floor(Math.random() * deck.length);
+      selectedCards.push(deck.splice(index, 1)[0]);
+    }
+
+    selectedCards.forEach((card, i) => {
+      const cardDiv = document.createElement("div");
+      cardDiv.classList.add("card");
+      cardDiv.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">Card ${i + 1}</div>
+          <div class="card-back">
+            <h3>${card.name}</h3>
+            <p><strong>Keywords:</strong> ${card.keywords}</p>
+            <p>${card.description}</p>
+          </div>
+        </div>
+      `;
+      cardsContainer.appendChild(cardDiv);
+
+      cardDiv.addEventListener("click", () => {
+        if (cardDiv.classList.contains("flipped")) return;
+        cardDiv.classList.add("flipped");
+        cardsFlipped++;
+        if (cardsFlipped === 3) {
+          showOverallReading();
+        }
+      });
+    });
+  }
+
+  function showOverallReading() {
+    const name = nameInput.value.trim();
+    const zodiac = zodiacInput.value;
+    const focus = focusInput.value;
+
+    const card1 = selectedCards[0];
+    const card2 = selectedCards[1];
+    const card3 = selectedCards[2];
+
+    // Build a paragraph interpretation (same style as before)
+    const paragraph = `Dear ${name}, your ${focus.toLowerCase()} reading based on your zodiac sign ${zodiac} reveals a transformative journey: 
+    The first card, ${card1.name}, indicates ${card1.description.toLowerCase()}. 
+    Next, ${card2.name} suggests ${card2.description.toLowerCase()}. 
+    Finally, ${card3.name} brings a message of ${card3.description.toLowerCase()}. 
+    Embrace these insights to guide your path forward with confidence and clarity.`;
+
+    overallReading.textContent = paragraph;
+    overallReading.style.display = "block";
+    actionsDiv.style.display = "flex";
+  }
+
+  // Download functionality
+  downloadBtn.addEventListener("click", () => {
+    const content = 
+`Tarot Reading for ${nameInput.value.trim()}
+Age: ${ageInput.value.trim()}
+Zodiac Sign: ${zodiacInput.value}
+Focus: ${focusInput.value}
+
+${overallReading.textContent}`;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${nameInput.value.trim()}_tarot_reading.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Share functionality - uses navigator.share API if available
+  shareBtn.addEventListener("click", async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Tarot Reading for ${nameInput.value.trim()}`,
+          text: overallReading.textContent,
+          url: window.location.href
+        });
+      } catch (err) {
+        alert("Sharing failed or was cancelled.");
+      }
+    } else {
+      alert("Sharing not supported on this browser. You can copy the text manually.");
+    }
+  });
+
+</script>
+</body>
+</html>
